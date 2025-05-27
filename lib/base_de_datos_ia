@@ -1,0 +1,263 @@
+Modelos en Dart para usar en tu app Flutter, basados en las tablas de tu base de datos MySQL.
+Son ideales para trabajar con SQLite (por ejemplo con sqflite).
+
+class AccesoUsuario {
+  final int? idAcceso;
+  final String fechaHoraAcceso;
+
+  AccesoUsuario({this.idAcceso, required this.fechaHoraAcceso});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_acceso': idAcceso,
+      'fecha_hora_acceso': fechaHoraAcceso,
+    };
+  }
+
+  factory AccesoUsuario.fromMap(Map<String, dynamic> map) {
+    return AccesoUsuario(
+      idAcceso: map['id_acceso'],
+      fechaHoraAcceso: map['fecha_hora_acceso'],
+    );
+  }
+}
+
+class Usuario {
+  final String nombreUsuario;
+  final String telefonoUsuario;
+  final String direccionUsuario;
+  final String fotoUrlUsuario;
+  final String telefonoContacto;
+  final String nombreContacto;
+
+  Usuario({
+    required this.nombreUsuario,
+    required this.telefonoUsuario,
+    required this.direccionUsuario,
+    required this.fotoUrlUsuario,
+    required this.telefonoContacto,
+    required this.nombreContacto,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'nombre_usuario': nombreUsuario,
+      'telefono_usuario': telefonoUsuario,
+      'direccion_usuario': direccionUsuario,
+      'foto_url_usuario': fotoUrlUsuario,
+      'telefono_contacto': telefonoContacto,
+      'nombre_contacto': nombreContacto,
+    };
+  }
+
+  factory Usuario.fromMap(Map<String, dynamic> map) {
+    return Usuario(
+      nombreUsuario: map['nombre_usuario'],
+      telefonoUsuario: map['telefono_usuario'],
+      direccionUsuario: map['direccion_usuario'],
+      fotoUrlUsuario: map['foto_url_usuario'],
+      telefonoContacto: map['telefono_contacto'],
+      nombreContacto: map['nombre_contacto'],
+    );
+  }
+}
+
+class Contacto {
+  final int? idContacto;
+  final String nombreContacto;
+  final String telefonoContacto;
+  final String fotoContactoUrl;
+
+  Contacto({
+    this.idContacto,
+    required this.nombreContacto,
+    required this.telefonoContacto,
+    required this.fotoContactoUrl,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_contacto': idContacto,
+      'nombre_contacto': nombreContacto,
+      'telefono_contacto': telefonoContacto,
+      'foto_contacto_url': fotoContactoUrl,
+    };
+  }
+
+  factory Contacto.fromMap(Map<String, dynamic> map) {
+    return Contacto(
+      idContacto: map['id_contacto'],
+      nombreContacto: map['nombre_contacto'],
+      telefonoContacto: map['telefono_contacto'],
+      fotoContactoUrl: map['foto_contacto_url'],
+    );
+  }
+}
+
+class Aviso {
+  final int? idAviso;
+  final int idContacto;
+  final String nombreAviso;
+  final String descripcionAviso;
+  final String horaInicioAviso;
+  final String horaFinAviso;
+
+  Aviso({
+    this.idAviso,
+    required this.idContacto,
+    required this.nombreAviso,
+    required this.descripcionAviso,
+    required this.horaInicioAviso,
+    required this.horaFinAviso,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_aviso': idAviso,
+      'id_contacto': idContacto,
+      'nombre_aviso': nombreAviso,
+      'descripcion_aviso': descripcionAviso,
+      'hora_inicio_aviso': horaInicioAviso,
+      'hora_fin_aviso': horaFinAviso,
+    };
+  }
+
+  factory Aviso.fromMap(Map<String, dynamic> map) {
+    return Aviso(
+      idAviso: map['id_aviso'],
+      idContacto: map['id_contacto'],
+      nombreAviso: map['nombre_aviso'],
+      descripcionAviso: map['descripcion_aviso'],
+      horaInicioAviso: map['hora_inicio_aviso'],
+      horaFinAviso: map['hora_fin_aviso'],
+    );
+  }
+}
+
+class Medicacion {
+  final int? idMedicacion;
+  final String nombreMedicacion;
+  final String descripcionMedicacion;
+  final String fechaHoraMedicacion;
+  final String fotoUrl;
+
+  Medicacion({
+    this.idMedicacion,
+    required this.nombreMedicacion,
+    required this.descripcionMedicacion,
+    required this.fechaHoraMedicacion,
+    required this.fotoUrl,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_medicacion': idMedicacion,
+      'nombre_medicacion': nombreMedicacion,
+      'descripcion_medicacion': descripcionMedicacion,
+      'fecha_hora_medicacion': fechaHoraMedicacion,
+      'foto_url': fotoUrl,
+    };
+  }
+
+  factory Medicacion.fromMap(Map<String, dynamic> map) {
+    return Medicacion(
+      idMedicacion: map['id_medicacion'],
+      nombreMedicacion: map['nombre_medicacion'],
+      descripcionMedicacion: map['descripcion_medicacion'],
+      fechaHoraMedicacion: map['fecha_hora_medicacion'],
+      fotoUrl: map['foto_url'],
+    );
+  }
+}
+
+class Refran {
+  final int? idRefran;
+  final String textoRefran;
+
+  Refran({this.idRefran, required this.textoRefran});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_refran': idRefran,
+      'texto_refran': textoRefran,
+    };
+  }
+
+  factory Refran.fromMap(Map<String, dynamic> map) {
+    return Refran(
+      idRefran: map['id_refran'],
+      textoRefran: map['texto_refran'],
+    );
+  }
+}
+
+class Recordatorio {
+  final int? idRecordatorio;
+  final String nombreRecordatorio;
+  final String descripcionRecordatorio;
+  final String fechaHoraRecordatorio;
+  final String fotoRecordatorioUrl;
+
+  Recordatorio({
+    this.idRecordatorio,
+    required this.nombreRecordatorio,
+    required this.descripcionRecordatorio,
+    required this.fechaHoraRecordatorio,
+    required this.fotoRecordatorioUrl,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_recordatorio': idRecordatorio,
+      'nombre_recordatorio': nombreRecordatorio,
+      'descripcion_recordatorio': descripcionRecordatorio,
+      'fecha_hora_recordatorio': fechaHoraRecordatorio,
+      'foto_recordatorio_url': fotoRecordatorioUrl,
+    };
+  }
+
+  factory Recordatorio.fromMap(Map<String, dynamic> map) {
+    return Recordatorio(
+      idRecordatorio: map['id_recordatorio'],
+      nombreRecordatorio: map['nombre_recordatorio'],
+      descripcionRecordatorio: map['descripcion_recordatorio'],
+      fechaHoraRecordatorio: map['fecha_hora_recordatorio'],
+      fotoRecordatorioUrl: map['foto_recordatorio_url'],
+    );
+  }
+}
+
+class Favorito {
+  final int? idFavorito;
+  final String nombreFavorito;
+  final String textoWebUrl;
+  final String fotoFavoritoUrl;
+
+  Favorito({
+    this.idFavorito,
+    required this.nombreFavorito,
+    required this.textoWebUrl,
+    required this.fotoFavoritoUrl,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id_favorito': idFavorito,
+      'nombre_favorito': nombreFavorito,
+      'textoweb_url': textoWebUrl,
+      'foto_favorito_url': fotoFavoritoUrl,
+    };
+  }
+
+  factory Favorito.fromMap(Map<String, dynamic> map) {
+    return Favorito(
+      idFavorito: map['id_favorito'],
+      nombreFavorito: map['nombre_favorito'],
+      textoWebUrl: map['textoweb_url'],
+      fotoFavoritoUrl: map['foto_favorito_url'],
+    );
+  }
+}
+
+
+FIN DE LA PAGINA
