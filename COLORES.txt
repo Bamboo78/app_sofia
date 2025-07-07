@@ -1,0 +1,7 @@
+| Elemento                       | Color                    | Código Dart         |
+| ------------------------------ | ------------------------ | ------------------- |
+| **Contorno / Texto**           | Azul                     | `Color(0xFF42A6DC)` |
+| **Cabello**                    | Negro profundo           | `Color(0xFF1E1E1E)` |
+| **Rostro / Piel**              | Beige claro / piel suave | `Color(0xFFF5D4A8)` |
+| **Fondo interior del corazón** | Verde-azulado claro      | `Color(0xFF7EDFC5)` |
+| **Contorno corazón**           | Azul (mismo del texto)   | `Color(0xFF42A6DC)` |

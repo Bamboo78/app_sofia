@@ -1,4 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:io';
+import 'globals.dart';
+import 'pages/medicacion_page.dart';
+import 'pages/avisos_page.dart';
+import 'pages/favoritos_page.dart';
+import 'pages/agenda_page.dart';
+import 'pages/contactos_page.dart';
+import 'pages/refranes_page.dart';
+import 'pages/usuario_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,45 +17,93 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Sofía',
+      debugShowCheckedModeBanner: false, // quita debug banner
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: 'Montserrat', 
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF197A89)),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const SofiaApp(),
+    );
+  }
+}
+
+class SofiaApp extends StatefulWidget {
+  const SofiaApp({super.key});
+
+  @override
+  State<SofiaApp> createState() => _SofiaAppState();
+}
+
+class _SofiaAppState extends State<SofiaApp> {
+  double splashOpacity = 1.0;
+  double homeOpacity = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // desvanece el splash y muestra la home al mismo tiempo
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        splashOpacity = 0.0;
+        homeOpacity = 1.0;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Scaffold(
+      backgroundColor: const Color(0xFF197A89),
+      body: Stack(
+        children: [
+          AnimatedOpacity(
+            opacity: homeOpacity,
+            duration: const Duration(seconds: 2),
+            child: MyHomePage(title: 'Sofia Home Page'),
+          ),
+          
+          AnimatedOpacity(
+            opacity: splashOpacity,
+            duration: const Duration(seconds: 2),
+            child: Center(
+              child: SizedBox(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      width: size.width * 0.4,
+                      height: size.width * 0.4,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Sofía',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -54,69 +112,282 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  double _opacity = 0.0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  @override
+  void initState() {
+    super.initState();
+    // Hace visible la página principal después de que se construye
+    Future.delayed(const Duration(milliseconds: 100), () {
+      setState(() {
+        _opacity = 1.0;
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    const Color mainColor = Color(0xFF197A89);
+    const Color cardColor = Color(0xFFD1E4EA);
+    
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      backgroundColor: const Color(0xFFFFFFFF),
+      body: AnimatedOpacity(
+        opacity: _opacity,
+        duration: const Duration(seconds: 3),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const UsuarioPage()),
+                        ).then((_) {
+                          setState(() {}); // Para refrescar si se cambia la imagen
+                        });
+                      },
+                      child: Container( //avatar del usuario
+                        decoration: BoxDecoration(
+                          color: mainColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFFFFFFF),
+                              blurRadius: 9,
+                              offset: Offset(3, 3),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: userImagePath != null
+                            ? ClipOval(
+                                child: Image.file(
+                                  File(userImagePath!),
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Icon(Icons.person, color: Color(0xFFFFFFFF), size: 60),
+                      ),
+                    ),
+                    
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: mainColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFFFFFF),
+                              blurRadius: 9,
+                              offset: Offset(3, 3),
+                            ),
+                          ],
+                        ),
+                        child: Text( //nombre de bienvenida
+                          'Hola${userName.isNotEmpty ? ' $userName' : ''}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            height: 1.6,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+
+                    GestureDetector( //popup de cierre
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('¿Qué deseas hacer?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(); 
+                                },
+                                child: const Text('Cerrar sesión'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  exit(0);
+                                },
+                                child: const Text('Cerrar aplicación'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(); // Solo cierra el diálogo
+                                },
+                                child: const Text('Volver'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      
+
+                      child: Container( //icono de cerrar
+                        decoration: BoxDecoration(
+                          color: mainColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFFFFFFF),
+                              blurRadius: 9,
+                              offset: Offset(3, 3),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(Icons.close, color: Color(0xFFFFFFFF), size: 60),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                Expanded( //contenido de las terjetas
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 24,
+                    crossAxisSpacing: 24,
+                    childAspectRatio: 1.2,
+                    children: [
+                      _MenuCard(
+                        icon: Icons.error_outline,
+                        label: 'AVISOS',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AvisosPage()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        icon: Icons.star_border,
+                        label: 'FAVORITOS',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const FavoritosPage()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        icon: Icons.calendar_month,
+                        label: 'AGENDA',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AgendaPage()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        icon: Icons.medication_outlined,
+                        label: 'MEDICACIÓN',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MedicacionPage()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        icon: Icons.person_outline,
+                        label: 'CONTACTOS',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ContactosPage()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        icon: Icons.text_fields,
+                        label: 'REFRANES',
+                        color: mainColor,
+                        cardColor: cardColor,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const RefranesPage()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+// Widget para los botones del menú
+class _MenuCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color cardColor;
+  final VoidCallback? onTap; 
+
+  const _MenuCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.cardColor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card( //diseño de las tarjetas
+      color: cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 8,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap, 
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 80),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,0 +1,2 @@
+String? userImagePath;
+String userName = '';
