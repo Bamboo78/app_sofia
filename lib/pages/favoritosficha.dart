@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
-class ContactoFichaDialog extends StatefulWidget {
+class FavoritosFichaDialog extends StatefulWidget {
   final String? nombreInicial;
-  final String? telefonoInicial;
+  final String? favoritoInicial;
   final VoidCallback? onEliminar;
-  final void Function(String nombre, String telefono, File? imagen)? onGuardar;
+  final void Function(String nombre, String favorito, File? imagen)? onGuardar;
 
-  const ContactoFichaDialog({
+  const FavoritosFichaDialog({
     super.key,
     this.nombreInicial,
-    this.telefonoInicial,
+    this.favoritoInicial,
     this.onEliminar,
     this.onGuardar,
   });
 
   @override
-  State<ContactoFichaDialog> createState() => _ContactoFichaDialogState();
+  State<FavoritosFichaDialog> createState() => _FavoritosFichaDialogState();
 }
 
-class _ContactoFichaDialogState extends State<ContactoFichaDialog> {
+class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
   late TextEditingController nombreController;
-  late TextEditingController telefonoController;
+  late TextEditingController favoritoController;
   File? _imagenSeleccionada;
 
   @override
   void initState() {
     super.initState();
     nombreController = TextEditingController(text: widget.nombreInicial ?? '');
-    telefonoController = TextEditingController(text: widget.telefonoInicial ?? '');
+    favoritoController = TextEditingController(text: widget.favoritoInicial ?? '');
   }
 
   Future<void> _seleccionarImagen() async {
@@ -67,7 +67,7 @@ class _ContactoFichaDialogState extends State<ContactoFichaDialog> {
                 onTap: _seleccionarImagen,
                 child: _imagenSeleccionada == null
                     ? const Center(
-                        child: Icon(Icons.person, color: Colors.white, size: 90),
+                        child: Icon(Icons.public, color: Colors.white, size: 90),
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(32),
@@ -102,9 +102,9 @@ class _ContactoFichaDialogState extends State<ContactoFichaDialog> {
             const SizedBox(height: 12),
             // Campo teléfono
             TextField(
-              controller: telefonoController,
+              controller: favoritoController,
               decoration: InputDecoration(
-                labelText: 'TELÉFONO',
+                labelText: 'PÁGINA WEB',
                 labelStyle: const TextStyle(color: mainColor, fontWeight: FontWeight.bold),
                 enabledBorder: OutlineInputBorder(
                   borderSide: const BorderSide(color: mainColor, width: 2),
@@ -120,8 +120,8 @@ class _ContactoFichaDialogState extends State<ContactoFichaDialog> {
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 24),
-            // Botón añadir/eliminar
-            SizedBox(
+            
+            SizedBox( // Botón añadir/eliminar
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
@@ -137,7 +137,7 @@ class _ContactoFichaDialogState extends State<ContactoFichaDialog> {
                   if (widget.onGuardar != null) {
                     widget.onGuardar!(
                       nombreController.text,
-                      telefonoController.text,
+                      favoritoController.text,
                       _imagenSeleccionada,
                     );
                   }

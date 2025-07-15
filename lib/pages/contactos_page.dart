@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'contactosficha.dart'; // Asegúrate de importar tu widget de ficha
+import 'contactosficha.dart';
 import 'dart:async';
 
 class ContactosPage extends StatefulWidget {
@@ -82,10 +82,13 @@ class _ContactosPageState extends State<ContactosPage> {
                                 builder: (context) => ContactoFichaDialog(
                                   nombreInicial: contactos[index]['nombre'] ?? '',
                                   telefonoInicial: contactos[index]['telefono'] ?? '',
-                                  onGuardar: (nombre, telefono) {
+                                  onGuardar: (nombre, telefono, [imagen]) {
                                     setState(() {
                                       contactos[index]['nombre'] = nombre;
                                       contactos[index]['telefono'] = telefono;
+                                      if (imagen != null) {
+                                        contactos[index]['imagen'] = imagen;
+                                      }
                                     });
                                   },
                                   onEliminar: () {

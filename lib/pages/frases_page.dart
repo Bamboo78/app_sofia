@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:intl/intl.dart';
+import '../frases.dart';
 
-class RefranesPage extends StatefulWidget {
-  const RefranesPage({super.key});
+class FrasesPage extends StatefulWidget {
+  const FrasesPage({super.key});
 
   @override
-  State<RefranesPage> createState() => _RefranesPageState();
+  State<FrasesPage> createState() => _RefranesPageState();
 }
 
-class _RefranesPageState extends State<RefranesPage> {
+class _RefranesPageState extends State<FrasesPage> {
   double fontSize = 24;
   String refran = 'Cargando...';
 
@@ -19,25 +19,12 @@ class _RefranesPageState extends State<RefranesPage> {
     cargarRefran();
   }
 
-  Future<void> cargarRefran() async {
-    final url = Uri.parse('https://zenquotes.io/api/today');
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          refran = '"${data[0]['q']}"\n- ${data[0]['a']}';
-        });
-      } else {
-        setState(() {
-          refran = 'No se pudo cargar el refrán';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        refran = 'Error de conexión';
-      });
-    }
+  void cargarRefran() {
+    final now = DateTime.now();
+    final index = int.parse(DateFormat("D").format(now)) % frases.length;
+    setState(() {
+      refran = frases[index]['frase'] ?? 'Frase no disponible';
+    });
   }
 
   @override
@@ -65,7 +52,7 @@ class _RefranesPageState extends State<RefranesPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'REFRANES',
+                            'FRASE DEL DÍA',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -104,16 +91,29 @@ class _RefranesPageState extends State<RefranesPage> {
                     ),
                   ],
                 ),
-                child: Center(
-                  child: Text(
-                    refran,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: fontSize,
-                      color: const Color(0xFF000000),
-                      fontWeight: FontWeight.bold,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      refran,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        color: const Color(0xFF000000),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Text(
+                      frases[int.parse(DateFormat("D").format(DateTime.now())) % frases.length]['autor'] ?? '',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        color: Color(0xFF197A89),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -154,9 +154,9 @@ class _RefranesPageState extends State<RefranesPage> {
                     Align( // Imagen de usuario
                       alignment: Alignment.bottomLeft,
                       child: Image.asset(
-                        'assets/logo.png', // Cambia por la ruta de tu asset
-                        width: 160,
-                        height: 160,
+                        'assets/logo.png', 
+                        width: 180,
+                        height: 180,
                       ),
                     ),
                   ],

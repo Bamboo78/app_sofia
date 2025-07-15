@@ -205,7 +205,10 @@ class _MedicacionPageState extends State<MedicacionPage> {
         ),
         actions: [
           if (!isNew)
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
               onPressed: () {
                 setState(() {
                   meds.removeAt(index!);
@@ -214,13 +217,9 @@ class _MedicacionPageState extends State<MedicacionPage> {
               },
               child: const Text(
                 'Borrar',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.white),
               ),
             ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: mainColor),
             onPressed: () {

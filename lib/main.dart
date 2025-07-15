@@ -7,7 +7,7 @@ import 'pages/avisos_page.dart';
 import 'pages/favoritos_page.dart';
 import 'pages/agenda_page.dart';
 import 'pages/contactos_page.dart';
-import 'pages/refranes_page.dart';
+import 'pages/frases_page.dart';
 import 'pages/usuario_page.dart';
 
 void main() {
@@ -157,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Color(0xFFFFFFFF),
+                              color: cardColor,
                               blurRadius: 9,
                               offset: Offset(3, 3),
                             ),
@@ -197,9 +197,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            height: 1.6,
+                            height: 1.4,
                           ),
                         ),
                       ),
@@ -212,6 +212,18 @@ class _MyHomePageState extends State<MyHomePage> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('¿Qué deseas hacer?'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 8),
+                                Image.asset(
+                                  'assets/logo.png',
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.contain,
+                                ),
+                              ],
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () {
@@ -225,12 +237,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                   exit(0);
                                 },
                                 child: const Text('Cerrar aplicación'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Solo cierra el diálogo
-                                },
-                                child: const Text('Volver'),
                               ),
                             ],
                           ),
@@ -259,77 +265,108 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(height: 40),
 
                 Expanded( //contenido de las terjetas
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 24,
-                    crossAxisSpacing: 24,
-                    childAspectRatio: 1.2,
+                  child: Column(
                     children: [
-                      _MenuCard(
-                        icon: Icons.error_outline,
-                        label: 'AVISOS',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AvisosPage()),
-                          );
-                        },
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.error_outline,
+                                label: 'AVISOS',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const AvisosPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.public,
+                                label: 'FAVORITOS',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const FavoritosPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      _MenuCard(
-                        icon: Icons.star_border,
-                        label: 'FAVORITOS',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const FavoritosPage()),
-                          );
-                        },
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.calendar_month,
+                                label: 'AGENDA',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const AgendaPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.medication_outlined,
+                                label: 'MEDICACIÓN',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const MedicacionPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      _MenuCard(
-                        icon: Icons.calendar_month,
-                        label: 'AGENDA',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AgendaPage()),
-                          );
-                        },
-                      ),
-                      _MenuCard(
-                        icon: Icons.medication_outlined,
-                        label: 'MEDICACIÓN',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const MedicacionPage()),
-                          );
-                        },
-                      ),
-                      _MenuCard(
-                        icon: Icons.person_outline,
-                        label: 'CONTACTOS',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const ContactosPage()),
-                          );
-                        },
-                      ),
-                      _MenuCard(
-                        icon: Icons.text_fields,
-                        label: 'REFRANES',
-                        color: mainColor,
-                        cardColor: cardColor,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const RefranesPage()),
-                          );
-                        },
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.person_outline,
+                                label: 'CONTACTOS',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const ContactosPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _MenuCard(
+                                icon: Icons.text_fields,
+                                label: 'FRASE DEL DÍA',
+                                color: mainColor,
+                                cardColor: cardColor,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const FrasesPage()),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -387,7 +424,7 @@ class _MenuCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      )
+    );  
   }
 }
