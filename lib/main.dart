@@ -113,11 +113,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   double _opacity = 0.0;
+  bool isAuthenticated = false; // <-- Ponla aquí
 
   @override
   void initState() {
     super.initState();
-    // Hace visible la página principal después de que se construye
     Future.delayed(const Duration(milliseconds: 100), () {
       setState(() {
         _opacity = 1.0;
@@ -140,128 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const UsuarioPage()),
-                        ).then((_) {
-                          setState(() {}); // Para refrescar si se cambia la imagen
-                        });
-                      },
-                      child: Container( //avatar del usuario
-                        decoration: BoxDecoration(
-                          color: mainColor,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: cardColor,
-                              blurRadius: 9,
-                              offset: Offset(3, 3),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: userImagePath != null
-                            ? ClipOval(
-                                child: Image.file(
-                                  File(userImagePath!),
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : Icon(Icons.person, color: Color(0xFFFFFFFF), size: 60),
-                      ),
-                    ),
-                    
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: mainColor,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFFFFF),
-                              blurRadius: 9,
-                              offset: Offset(3, 3),
-                            ),
-                          ],
-                        ),
-                        child: Text( //nombre de bienvenida
-                          'Hola${userName.isNotEmpty ? ' $userName' : ''}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-
-                    GestureDetector( //popup de cierre
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('¿Qué deseas hacer?'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 8),
-                                Image.asset(
-                                  'assets/logo.png',
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.contain,
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(); 
-                                },
-                                child: const Text('Cerrar sesión'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  exit(0);
-                                },
-                                child: const Text('Cerrar aplicación'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      
-
-                      child: Container( //icono de cerrar
-                        decoration: BoxDecoration(
-                          color: mainColor,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFFFFFFFF),
-                              blurRadius: 9,
-                              offset: Offset(3, 3),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(Icons.close, color: Color(0xFFFFFFFF), size: 60),
-                      ),
-                    ),
-                  ],
-                ),
+                buildAppBar(),
                 const SizedBox(height: 40),
 
                 Expanded( //contenido de las terjetas
@@ -378,6 +257,101 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  Widget buildAppBar() {
+  const Color mainColor = Color(0xFF197A89);
+  const Color cardColor = Color(0xFFD1E4EA);
+
+  if (!isAuthenticated) {
+    // Antes de autenticarse
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const UsuarioPage()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: mainColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: cardColor,
+              blurRadius: 9,
+              offset: Offset(3, 3),
+            ),
+          ],
+        ),
+        child: const Text(
+          'Hola',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
+  } else {
+    // Después de autenticarse
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: mainColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: cardColor,
+            blurRadius: 9,
+            offset: Offset(3, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Hola, ${userName.isNotEmpty ? userName : "Usuario"}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                height: 1.4,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const UsuarioPage()),
+              ).then((result) {
+                if (result == true) {
+                  setState(() {});
+                }
+              });
+            },
+            child: userImagePath != null
+                ? ClipOval(
+                    child: Image.file(
+                      File(userImagePath!),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Icon(Icons.person, color: Colors.white, size: 48),
+          ),
+        ],
+      ),
+    );
+  }
+}
 }
 
 // Widget para los botones del menú

@@ -81,7 +81,7 @@ class _UsuarioPageState extends State<UsuarioPage> {
                     ),
                     onPressed: () {
                       userName = _nombreController.text;
-                      Navigator.of(context).pop();
+                      Navigator.of(context).pop(true); // Devuelve true para refrescar la barra
                     },
                     child: const Text(
                       'CONFIRMAR',

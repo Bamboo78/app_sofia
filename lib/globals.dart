@@ -1,2 +1,2 @@
-String? userImagePath;
 String userName = '';
+String? userImagePath;
