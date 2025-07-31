@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:io';
 import 'globals.dart';
-import 'pages/medicacion_page.dart';
+import 'pages/medicacion_diaria.dart';
 import 'pages/avisos_page.dart';
 import 'pages/favoritos_page.dart';
 import 'pages/agenda_page.dart';
@@ -205,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 cardColor: cardColor,
                                 onTap: () {
                                   Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const MedicacionPage()),
+                                    MaterialPageRoute(builder: (_) => const MedicacionDiariaPage()),
                                   );
                                 },
                               ),

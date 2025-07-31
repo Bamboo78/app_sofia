@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'medicacion_diaria.dart';
 
-class MedicacionPage extends StatefulWidget {
-  const MedicacionPage({super.key});
+class MedicacionListadoPage extends StatefulWidget {
+  const MedicacionListadoPage({super.key});
 
   @override
-  State<MedicacionPage> createState() => _MedicacionPageState();
+  State<MedicacionListadoPage> createState() => _MedicacionListadoPageState();
 }
 
-class _MedicacionPageState extends State<MedicacionPage> {
+class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
   final List<Map<String, String>> meds = [
     {'name': 'PARACETAMOL', 'desc': 'cada 8 horas'},
     {'name': 'SINTRON', 'desc': 'sábados'},
@@ -144,10 +145,12 @@ class _MedicacionPageState extends State<MedicacionPage> {
                             ),
                           ),
                           onPressed: () {
-                            _showEditDialog(context, null, meds, mainColor, cardColor, isNew: true);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const MedicacionDiariaPage()),
+                            );
                           },
                           child: const Text(
-                            'AÑADIR',
+                            'HORARIO',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:your_package_name/database/agenda_database.dart'; // Asegúrate de importar tu base de datos  
 
 class AgendaPage extends StatefulWidget {
   const AgendaPage({super.key});
@@ -8,15 +9,13 @@ class AgendaPage extends StatefulWidget {
 }
 
 class _AgendaPageState extends State<AgendaPage> {
-  final List<Map<String, String>> meds = [
-    {'name': 'CUMPLEAÑOS', 'desc': 'cada 8 horas'},
-    {'name': 'ANIVERSARIO', 'desc': 'sábados'},
-    {'name': 'CUMPLEAÑOS', 'desc': 'tardes'},
-    {'name': 'CITA MÉDICA', 'desc': 'Subhead'},
-    {'name': 'CITA MÉDICA', 'desc': '2 al día'},
-    {'name': 'CUMPLEAÑOS', 'desc': 'tardes'},
-    {'name': 'ANIVERSARIO', 'desc': 'Subhead'},
-  ];
+  late Future<List<Map<String, dynamic>>> _medsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _medsFuture = AgendaDatabase.getAll();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,81 +73,93 @@ class _AgendaPageState extends State<AgendaPage> {
             Expanded( // Lista de medicación y botón
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    Expanded( // Lista expandible
-                      child: ListView.separated(
-                        itemCount: meds.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, i) {
-                          return GestureDetector(
-                            onTap: () {
-                              _showEditDialog(context, i, meds, mainColor, cardColor);
-                            },
-                            child: Card(
-                              color: cardColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              elevation: 3,
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 40), // Aumenta el valor si quieres más espacio
-                                leading: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _iconoPorTipo(meds[i]['name'] ?? ''),
-                                    const SizedBox(width: 40), 
-                                  ],
-                                ),
-                                
-                                title: Text(
-                                  meds[i]['name']!,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.black87,
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _medsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else {
+                      final meds = snapshot.data!;
+                      return Column(
+                        children: [
+                          Expanded( // Lista expandible
+                            child: ListView.separated(
+                              itemCount: meds.length,
+                              separatorBuilder: (_, _) => const SizedBox(height: 8),
+                              itemBuilder: (context, i) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    _showEditDialog(context, i, meds, mainColor, cardColor);
+                                  },
+                                  child: Card(
+                                    color: cardColor,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 3,
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 40), // Aumenta el valor si quieres más espacio
+                                      leading: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _iconoPorTipo(meds[i]['name'] ?? ''),
+                                          const SizedBox(width: 40), 
+                                        ],
+                                      ),
+                                      
+                                      title: Text(
+                                        meds[i]['name']!,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        meds[i]['desc']!,
+                                        style: const TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                                              
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 80,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: mainColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                subtitle: Text(
-                                  meds[i]['desc']!,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 14,
+                                onPressed: () {
+                                  _showEditDialog(context, null, meds, mainColor, cardColor, isNew: true);
+                                },
+                                child: const Text(
+                                  'AÑADIR',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
                                   ),
                                 ),
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                                        
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 80,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
                           ),
-                          onPressed: () {
-                            _showEditDialog(context, null, meds, mainColor, cardColor, isNew: true);
-                          },
-                          child: const Text(
-                            'AÑADIR',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                        ],
+                      );
+                    }
+                  },
                 ),
               ),
             ),
