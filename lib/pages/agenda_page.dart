@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:your_package_name/database/agenda_database.dart'; // Asegúrate de importar tu base de datos  
+import '../db/agenda_database.dart';  
 
 class AgendaPage extends StatefulWidget {
   const AgendaPage({super.key});
@@ -170,9 +170,9 @@ class _AgendaPageState extends State<AgendaPage> {
   }
 
   void _showEditDialog(
-    BuildContext context,
+    BuildContext dialogContext,
     int? index,
-    List<Map<String, String>> meds,
+    List<Map<String, dynamic>> meds,
     Color mainColor,
     Color cardColor, {
     bool isNew = false,
@@ -183,7 +183,7 @@ class _AgendaPageState extends State<AgendaPage> {
         text: isNew ? '' : meds[index!]['desc']);
 
     showDialog(
-      context: context,
+      context: dialogContext,
       builder: (context) => AlertDialog(
         backgroundColor: cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -195,7 +195,7 @@ class _AgendaPageState extends State<AgendaPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: nameController.text.isNotEmpty ? nameController.text : null,
+              initialValue: nameController.text.isNotEmpty ? nameController.text : null,
               decoration: const InputDecoration(labelText: 'Nombre'),
               items: const [
                 DropdownMenuItem(value: 'CITA MÉDICA', child: Text('CITA MÉDICA')),
@@ -218,11 +218,17 @@ class _AgendaPageState extends State<AgendaPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              onPressed: () {
-                setState(() {
-                  meds.removeAt(index!);
-                });
-                Navigator.of(context).pop();
+              onPressed: () async {
+                final id = meds[index!]['id'];
+                await AgendaDatabase.delete(id);
+                if (mounted) {
+                  setState(() {
+                    _medsFuture = AgendaDatabase.getAll();
+                  });
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                }
               },
               child: const Text(
                 'Borrar',
@@ -231,19 +237,37 @@ class _AgendaPageState extends State<AgendaPage> {
             ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: mainColor),
-            onPressed: () {
-              setState(() {
-                if (isNew) {
-                  meds.add({
-                    'name': nameController.text,
-                    'desc': descController.text,
-                  });
-                } else {
-                  meds[index!]['name'] = nameController.text;
-                  meds[index]['desc'] = descController.text;
+            onPressed: () async {
+              if (nameController.text.isEmpty) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El nombre no puede estar vacío')),
+                  );
                 }
-              });
-              Navigator.of(context).pop();
+                return;
+              }
+
+              if (isNew) {
+                await AgendaDatabase.insert({
+                  'name': nameController.text,
+                  'desc': descController.text,
+                });
+              } else {
+                final id = meds[index!]['id'];
+                await AgendaDatabase.update(id, {
+                  'name': nameController.text,
+                  'desc': descController.text,
+                });
+              }
+
+              if (mounted) {
+                setState(() {
+                  _medsFuture = AgendaDatabase.getAll();
+                });
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              }
             },
             child: const Text('Guardar', style: TextStyle(color: Colors.white)),
           ),
