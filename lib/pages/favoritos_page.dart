@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sofia/db/favoritos_database.dart';
 import 'favoritosficha.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 
 class FavoritosPage extends StatefulWidget {
@@ -12,11 +14,13 @@ class FavoritosPage extends StatefulWidget {
 
 class _FavoritosPageState extends State<FavoritosPage> {
   final Color mainColor = const Color(0xFF197A89);
+  late Future<List<Map<String, dynamic>>> _favoritosFuture;
 
-  List<Map<String, dynamic>> contactos = List.generate(
-    6,
-    (_) => {'nombre': 'nombre', 'imagen': null, 'favorito': ''},
-  );
+  @override
+  void initState() {
+    super.initState();
+    _favoritosFuture = FavoritosDatabase.getAll();
+  }
 
 
 
@@ -61,79 +65,171 @@ class _FavoritosPageState extends State<FavoritosPage> {
             ),
             SizedBox(height: 32),
 
-            Expanded( // Grid de contactos
+            Expanded( // Grid de webs favoritas
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: GridView.builder(
-                  itemCount: contactos.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.1,
-                  ),
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () async {
-                            final url = contactos[index]['favorito'] ?? '';
-                            if (url.isNotEmpty) {
-                              final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
-                              }
-                            }
-                          },
-                          onLongPress: () {
-                            Timer(const Duration(seconds: 2), () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => FavoritosFichaDialog(
-                                  nombreInicial: contactos[index]['nombre'] ?? '',
-                                  favoritoInicial: contactos[index]['favorito'] ?? '',
-                                  onGuardar: (nombre, favorito, [imagen]) {
-                                    setState(() {
-                                      contactos[index]['nombre'] = nombre;
-                                      contactos[index]['favorito'] = favorito;
-                                      if (imagen != null) {
-                                        contactos[index]['imagen'] = imagen;
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _favoritosFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else {
+                      final favoritos = snapshot.data ?? [];
+                      // Crear una lista de 6 items (los existentes + slots vacíos)
+                      final totalSlots = 6;
+                      final displayFavoritos = [...favoritos];
+                      while (displayFavoritos.length < totalSlots) {
+                        displayFavoritos.add({'id': null, 'nombre': '', 'url': '', 'imagenPath': null});
+                      }
+                      
+                      return GridView.builder(
+                        itemCount: displayFavoritos.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemBuilder: (context, index) {
+                          final item = displayFavoritos[index];
+                          final isEmpty = item['id'] == null;
+                          
+                          return GestureDetector(
+                            onTap: () async {
+                              if (isEmpty) {
+                                // Mostrar diálogo para agregar
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => FavoritosFichaDialog(
+                                    nombreInicial: '',
+                                    favoritoInicial: '',
+                                    onGuardar: (nombre, url, imagen) async {
+                                      await FavoritosDatabase.insert({
+                                        'nombre': nombre,
+                                        'url': url,
+                                        'imagenPath': imagen?.path,
+                                      });
+                                      if (mounted) {
+                                        setState(() {
+                                          _favoritosFuture = FavoritosDatabase.getAll();
+                                        });
                                       }
-                                    });
-                                  },
-                                  onEliminar: () {
-                                    setState(() {
-                                      contactos.removeAt(index);
-                                    });
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              );
-                            });
-                          },
-                          child: CircleAvatar(
-                            radius: 60,
-                            backgroundColor: mainColor,
-                            backgroundImage: contactos[index]['imagen'] != null
-                                ? FileImage(contactos[index]['imagen'])
-                                : null,
-                            child: contactos[index]['imagen'] == null
-                                ? const Icon(Icons.public, color: Colors.white, size: 80)
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          contactos[index]['nombre'],
-                          style: TextStyle(
-                            color: mainColor,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        
-                      ],
-                    );
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                  ),
+                                );
+                              } else {
+                                // Abrir URL del favorito
+                                final url = item['url'] ?? '';
+                                if (url.isNotEmpty) {
+                                  final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                }
+                              }
+                            },
+                            onLongPress: () {
+                              if (!isEmpty && context.mounted) {
+                                Timer(const Duration(seconds: 2), () {
+                                  if (!context.mounted) return;
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => FavoritosFichaDialog(
+                                      nombreInicial: item['nombre'] ?? '',
+                                      favoritoInicial: item['url'] ?? '',
+                                      onGuardar: (nombre, url, imagen) async {
+                                        final id = item['id'];
+                                        await FavoritosDatabase.update(id, {
+                                          'nombre': nombre,
+                                          'url': url,
+                                          'imagenPath': imagen?.path,
+                                        });
+                                        if (mounted) {
+                                          setState(() {
+                                            _favoritosFuture = FavoritosDatabase.getAll();
+                                          });
+                                        }
+                                        if (context.mounted) {
+                                          Navigator.of(context).pop();
+                                        }
+                                      },
+                                      onEliminar: () async {
+                                        final id = item['id'];
+                                        await FavoritosDatabase.delete(id);
+                                        if (mounted) {
+                                          setState(() {
+                                            _favoritosFuture = FavoritosDatabase.getAll();
+                                          });
+                                        }
+                                        if (context.mounted) {
+                                          Navigator.of(context).pop();
+                                        }
+                                      },
+                                    ),
+                                  );
+                                });
+                              }
+                            },
+                            child: Card(
+                              color: isEmpty ? Colors.grey[200] : Colors.blue[50],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 3,
+                              child: isEmpty
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.add, color: mainColor, size: 48),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Añadir',
+                                            style: TextStyle(color: mainColor, fontSize: 14),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 50,
+                                            backgroundColor: mainColor,
+                                            backgroundImage: item['imagenPath'] != null && item['imagenPath']!.isNotEmpty
+                                                ? FileImage(File(item['imagenPath']!))
+                                                : null,
+                                            child: item['imagenPath'] == null || item['imagenPath']!.isEmpty
+                                                ? const Icon(Icons.public, color: Colors.white, size: 60)
+                                                : null,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            child: Text(
+                                              item['nombre'] ?? 'Sin nombre',
+                                              style: TextStyle(
+                                                color: mainColor,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                          );
+                        },
+                      );
+                    }
                   },
                 ),
               ),

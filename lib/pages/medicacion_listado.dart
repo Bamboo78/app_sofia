@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'medicacion_diaria.dart';
+import '../db/medicacion_database.dart';
 
 class MedicacionListadoPage extends StatefulWidget {
   const MedicacionListadoPage({super.key});
@@ -9,15 +10,19 @@ class MedicacionListadoPage extends StatefulWidget {
 }
 
 class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
-  final List<Map<String, String>> meds = [
-    {'name': 'PARACETAMOL', 'desc': 'cada 8 horas'},
-    {'name': 'SINTRON', 'desc': 'sábados'},
-    {'name': 'AMOXICILINA', 'desc': 'tardes'},
-    {'name': 'ENANTIUM', 'desc': 'Subhead'},
-    {'name': 'OMEPRAZOL', 'desc': '2 al día'},
-    {'name': 'AMOXICILINA', 'desc': 'tardes'},
-    {'name': 'ENANTIUM', 'desc': 'Subhead'},
-  ];
+  late Future<List<Map<String, dynamic>>> _medicacionesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _medicacionesFuture = MedicacionDatabase.getAll();
+  }
+
+  void _actualizarLista() {
+    setState(() {
+      _medicacionesFuture = MedicacionDatabase.getAll();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,15 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            return;
+          }
+          Navigator.of(context).pop();
+        },
+        child: SafeArea(
         child: Column(
           children: [
             // Header
@@ -79,61 +92,107 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
                   children: [
                     // Lista expandible
                     Expanded(
-                      child: ListView.separated(
-                        itemCount: meds.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 16),
-                        itemBuilder: (context, i) {
-                          return GestureDetector(
-                            onTap: () {
-                              _showEditDialog(context, i, meds, mainColor, cardColor);
-                            },
-                            child: Card(
-                              color: cardColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              elevation: 3,
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    meds[i]['name']![0],
-                                    style: TextStyle(
-                                      color: mainColor,
-                                      fontWeight: FontWeight.bold,
+                      child: FutureBuilder<List<Map<String, dynamic>>>(
+                        future: _medicacionesFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(child: Text('Error: ${snapshot.error}'));
+                          } else {
+                            final meds = snapshot.data ?? [];
+                            return ListView.separated(
+                              itemCount: meds.length,
+                              separatorBuilder: (_, _) => const SizedBox(height: 16),
+                              itemBuilder: (context, i) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    _showEditDialog(context, i, meds, mainColor, cardColor);
+                                  },
+                                  child: Card(
+                                    color: cardColor,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 3,
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        child: Text(
+                                          (meds[i]['nombre'] as String)[0],
+                                          style: TextStyle(
+                                            color: mainColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      title: Text(
+                                        meds[i]['nombre'] ?? '',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        meds[i]['descripcion'] ?? '',
+                                        style: const TextStyle(
+                                          color: Colors.black54,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () async {
+                                              await MedicacionDatabase.delete(meds[i]['id']);
+                                              _actualizarLista();
+                                            },
+                                            child: Icon(Icons.delete, color: Colors.red[400], size: 28),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Icon(Icons.settings, color: Colors.grey[300], size: 28),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                title: Text(
-                                  meds[i]['name']!,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  meds[i]['desc']!,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.grey[300], size: 28),
-                                    const SizedBox(width: 8),
-                                    Icon(Icons.settings, color: Colors.grey[300], size: 28),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
+                                );
+                              },
+                            );
+                          }
                         },
                       ),
                     ),
                                         
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 0),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 60,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: mainColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () async {
+                            _showEditDialog(context, null, [], mainColor, cardColor, isNew: true);
+                          },
+                          child: const Text(
+                            'NUEVO',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
                       child: SizedBox(
                         width: double.infinity,
                         height: 80,
@@ -167,6 +226,7 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -174,15 +234,17 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
   void _showEditDialog(
     BuildContext context,
     int? index,
-    List<Map<String, String>> meds,
+    List<Map<String, dynamic>> meds,
     Color mainColor,
     Color cardColor, {
     bool isNew = false,
   }) {
     final nameController = TextEditingController(
-        text: isNew ? '' : meds[index!]['name']);
+        text: isNew ? '' : meds[index!]['nombre']);
     final descController = TextEditingController(
-        text: isNew ? '' : meds[index!]['desc']);
+        text: isNew ? '' : meds[index!]['descripcion']);
+    final horaController = TextEditingController(
+        text: isNew ? '' : meds[index!]['hora']);
 
     showDialog(
       context: context,
@@ -204,6 +266,10 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
               controller: descController,
               decoration: const InputDecoration(labelText: 'Descripción'),
             ),
+            TextField(
+              controller: horaController,
+              decoration: const InputDecoration(labelText: 'Hora (HH:mm)'),
+            ),
           ],
         ),
         actions: [
@@ -212,11 +278,12 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
-              onPressed: () {
-                setState(() {
-                  meds.removeAt(index!);
-                });
-                Navigator.of(context).pop();
+              onPressed: () async {
+                await MedicacionDatabase.delete(meds[index!]['id']);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  _actualizarLista();
+                }
               },
               child: const Text(
                 'Borrar',
@@ -225,19 +292,24 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
             ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: mainColor),
-            onPressed: () {
-              setState(() {
-                if (isNew) {
-                  meds.add({
-                    'name': nameController.text,
-                    'desc': descController.text,
-                  });
-                } else {
-                  meds[index!]['name'] = nameController.text;
-                  meds[index]['desc'] = descController.text;
-                }
-              });
-              Navigator.of(context).pop();
+            onPressed: () async {
+              if (isNew) {
+                await MedicacionDatabase.insert({
+                  'nombre': nameController.text,
+                  'descripcion': descController.text,
+                  'hora': horaController.text,
+                });
+              } else {
+                await MedicacionDatabase.update(meds[index!]['id'], {
+                  'nombre': nameController.text,
+                  'descripcion': descController.text,
+                  'hora': horaController.text,
+                });
+              }
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                _actualizarLista();
+              }
             },
             child: const Text('Guardar', style: TextStyle(color: Colors.white)),
           ),

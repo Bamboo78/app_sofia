@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sofia/db/usuario_database.dart';
 import 'dart:io';
 import '../globals.dart';
 
@@ -13,6 +14,33 @@ class UsuarioPage extends StatefulWidget {
 class _UsuarioPageState extends State<UsuarioPage> {
   File? _image;
   final TextEditingController _nombreController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _direccionController = TextEditingController();
+  final TextEditingController _nombreContactoController = TextEditingController();
+  final TextEditingController _telefonoContactoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarDatos();
+  }
+
+  Future<void> _cargarDatos() async {
+    final usuario = await UsuarioDatabase.getUsuario();
+    if (usuario != null && mounted) {
+      setState(() {
+        _nombreController.text = usuario['nombre'] ?? '';
+        _telefonoController.text = usuario['telefono'] ?? '';
+        _direccionController.text = usuario['direccion'] ?? '';
+        _nombreContactoController.text = usuario['nombreContacto'] ?? '';
+        _telefonoContactoController.text = usuario['telefonoContacto'] ?? '';
+        if (usuario['imagenPath'] != null) {
+          _image = File(usuario['imagenPath']);
+        }
+        userImagePath = usuario['imagenPath'];
+      });
+    }
+  }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -20,7 +48,7 @@ class _UsuarioPageState extends State<UsuarioPage> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
-        userImagePath = pickedFile.path; // guarda la ruta globalmente
+        userImagePath = pickedFile.path;
       });
     }
   }
@@ -59,13 +87,13 @@ class _UsuarioPageState extends State<UsuarioPage> {
                 // Campos de texto
                 _CustomTextField(label: 'NOMBRE', controller: _nombreController),
                 const SizedBox(height: 16),
-                _CustomTextField(label: 'TELÉFONO'),
+                _CustomTextField(label: 'TELÉFONO', controller: _telefonoController),
                 const SizedBox(height: 16),
-                _CustomTextField(label: 'DIRECCIÓN'),
+                _CustomTextField(label: 'DIRECCIÓN', controller: _direccionController, maxLines: 2),
                 const SizedBox(height: 40),
-                _CustomTextField(label: 'NOMBRE CONTACTO'),
+                _CustomTextField(label: 'NOMBRE CONTACTO', controller: _nombreContactoController),
                 const SizedBox(height: 16),
-                _CustomTextField(label: 'TELÉFONO CONTACTO'),
+                _CustomTextField(label: 'TELÉFONO CONTACTO', controller: _telefonoContactoController),
                 const SizedBox(height: 40),
                 // Botón confirmar
                 SizedBox(
@@ -79,9 +107,20 @@ class _UsuarioPageState extends State<UsuarioPage> {
                       ),
                       shadowColor: Colors.black26,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      // Guardar datos en BD
+                      await UsuarioDatabase.saveUsuario({
+                        'nombre': _nombreController.text,
+                        'telefono': _telefonoController.text,
+                        'direccion': _direccionController.text,
+                        'nombreContacto': _nombreContactoController.text,
+                        'telefonoContacto': _telefonoContactoController.text,
+                        'imagenPath': userImagePath,
+                      });
                       userName = _nombreController.text;
-                      Navigator.of(context).pop(true); // Devuelve true para refrescar la barra
+                      if (context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
                     },
                     child: const Text(
                       'CONFIRMAR',
@@ -106,13 +145,15 @@ class _UsuarioPageState extends State<UsuarioPage> {
 class _CustomTextField extends StatelessWidget {
   final String label;
   final TextEditingController? controller;
-  const _CustomTextField({required this.label, this.controller});
+  final int maxLines;
+  const _CustomTextField({required this.label, this.controller, this.maxLines = 1});
 
   @override
   Widget build(BuildContext context) {
     const Color mainColor = Color(0xFF197A89);
     return TextField(
       controller: controller,
+      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(

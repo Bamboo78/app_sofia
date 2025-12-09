@@ -1,38 +1,38 @@
 name: sofia
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+description: "Un nuevo proyecto Flutter."
+# La siguiente línea evita que el paquete se publique accidentalmente en
+# pub.dev usando `flutter pub publish`. Esto es preferible para paquetes privados.
+publish_to: 'none' # Elimina esta línea si deseas publicar en pub.dev
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
+# Las siguientes líneas definen la versión y número de compilación de tu aplicación.
+# Un número de versión consta de tres números separados por puntos, como 1.2.43
+# seguido de un número de compilación opcional separado por +.
+# Tanto la versión como el número de compilación pueden anularse en flutter
+# build especificando --build-name y --build-number, respectivamente.
+# En Android, build-name se usa como versionName mientras que build-number se usa como versionCode.
+# Lee más sobre versionado en Android en https://developer.android.com/studio/publish/versioning
+# En iOS, build-name se usa como CFBundleShortVersionString mientras que build-number se usa como CFBundleVersion.
+# Lee más sobre versionado en iOS en
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+# En Windows, build-name se usa para las partes mayor, menor y de parche
+# de las versiones de archivo de producto mientras que build-number se usa como sufijo de compilación.
 version: 1.0.0+1
 
 environment:
   sdk: ^3.7.2
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
+# Las dependencias especifican otros paquetes que tu paquete necesita para funcionar.
+# Para actualizar automáticamente las dependencias de tu paquete a las versiones más recientes
+# considera ejecutar `flutter pub upgrade --major-versions`. Alternativamente,
+# las dependencias se pueden actualizar manualmente cambiando los números de versión a continuación
+# a la versión más reciente disponible en pub.dev. Para ver qué dependencias tienen versiones más recientes
+# disponibles, ejecuta `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # Las siguientes líneas agregan la fuente Cupertino Icons a tu aplicación.
+  # Úsalo con la clase CupertinoIcons para iconos de estilo iOS.
   cupertino_icons: ^1.0.8
   image_picker: ^1.0.7
   http: ^1.2.1
@@ -40,44 +40,47 @@ dependencies:
   url_launcher: ^6.2.6
   sqflite: ^2.3.3
   path: ^1.9.0
+  flutter_contacts: ^1.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+  flutter_launcher_icons: ^0.13.1
+
+  # El paquete "flutter_lints" a continuación contiene un conjunto de lints recomendados para
+  # fomentar buenas prácticas de codificación. El conjunto de lints proporcionado por el paquete está
+  # activado en el archivo `analysis_options.yaml` ubicado en la raíz de tu
+  # paquete. Consulta ese archivo para obtener información sobre cómo desactivar lints específicos
+  # y activar otros.
   flutter_lints: ^6.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+# Para obtener información sobre la parte genérica de Dart en este archivo, consulta
+# la siguiente página: https://dart.dev/tools/pub/pubspec
 
-# The following section is specific to Flutter packages.
+# La siguiente sección es específica de los paquetes de Flutter.
 flutter:
 
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # La siguiente línea asegura que la fuente Material Icons esté
+  # incluida en tu aplicación, para que puedas usar los iconos en
+  # la clase Icons de material.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
+  # Para agregar recursos a tu aplicación, agrega una sección de recursos, así:
   assets:
     - assets/logo.png
 
-  # An image asset can refer to one or more resolution-specific "variants", see
+  # Un recurso de imagen puede referirse a uno o más "variantes" específicas de resolución, consulta
   # https://flutter.dev/to/resolution-aware-images
 
-  # For details regarding adding assets from package dependencies, see
+  # Para obtener más detalles sobre cómo agregar recursos de dependencias de paquetes, consulta
   # https://flutter.dev/to/asset-from-package
 
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
+  # Para agregar fuentes personalizadas a tu aplicación, agrega una sección de fuentes aquí,
+  # en esta sección "flutter". Cada entrada en esta lista debe tener una
+  # clave "family" con el nombre de la familia de fuentes, y una clave "fonts" con una
+  # lista que proporciona el recurso y otros descriptores para la fuente. Por
+  # ejemplo:
   # fonts:
   #   - family: Schyler
   #     fonts:
@@ -90,11 +93,17 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  # Para obtener más detalles sobre fuentes de dependencias de paquetes,
+  # consulta https://flutter.dev/to/font-from-package
 
   fonts:
     - family: Montserrat
       fonts:
         - asset: assets/fonts/Montserrat-BoldItalic.ttf
         - asset: assets/fonts/Montserrat-MediumItalic.ttf
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  adaptive_icon_background: "#FFFFFF"

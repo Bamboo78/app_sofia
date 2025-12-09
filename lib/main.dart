@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
 import 'globals.dart';
@@ -9,8 +10,13 @@ import 'pages/agenda_page.dart';
 import 'pages/contactos_page.dart';
 import 'pages/frases_page.dart';
 import 'pages/usuario_page.dart';
+import 'db/usuario_database.dart';
 
 void main() {
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(const MyApp());
 }
 
@@ -24,7 +30,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false, // quita debug banner
       theme: ThemeData(
         fontFamily: 'Montserrat', 
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF197A89)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 255, 255, 255)),
       ),
       home: const SofiaApp(),
     );
@@ -45,8 +51,8 @@ class _SofiaAppState extends State<SofiaApp> {
   @override
   void initState() {
     super.initState();
-    // desvanece el splash y muestra la home al mismo tiempo
-    Future.delayed(const Duration(seconds: 3), () {
+    
+    Future.delayed(const Duration(seconds: 3), () { // desvanece el splash y muestra la home al mismo tiempo
       setState(() {
         splashOpacity = 0.0;
         homeOpacity = 1.0;
@@ -58,7 +64,7 @@ class _SofiaAppState extends State<SofiaApp> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: const Color(0xFF197A89),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           AnimatedOpacity(
@@ -69,7 +75,7 @@ class _SofiaAppState extends State<SofiaApp> {
           
           AnimatedOpacity(
             opacity: splashOpacity,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 1),
             child: Center(
               child: SizedBox(
                 child: Column(
@@ -77,8 +83,8 @@ class _SofiaAppState extends State<SofiaApp> {
                   children: [
                     Image.asset(
                       'assets/logo.png',
-                      width: size.width * 0.4,
-                      height: size.width * 0.4,
+                      width: size.width * 0.6,
+                      height: size.width * 0.6,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 16),
@@ -118,11 +124,23 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     Future.delayed(const Duration(milliseconds: 100), () {
       setState(() {
         _opacity = 1.0;
       });
     });
+  }
+
+  Future<void> _loadUserData() async {
+    final usuarioData = await UsuarioDatabase.getUsuario();
+    if (usuarioData != null) {
+      setState(() {
+        userName = usuarioData['nombre'] ?? '';
+        userImagePath = usuarioData['imagenPath'];
+        isAuthenticated = userName.isNotEmpty;
+      });
+    }
   }
 
   @override
@@ -286,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: const Text(
           'Hola',
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.left,
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
@@ -298,56 +316,56 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   } else {
     // Después de autenticarse
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: mainColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor,
-            blurRadius: 9,
-            offset: Offset(3, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'Hola, ${userName.isNotEmpty ? userName : "Usuario"}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                height: 1.4,
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const UsuarioPage()),
+        ).then((result) {
+          if (result == true) {
+            setState(() {});
+          }
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          color: mainColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: cardColor,
+              blurRadius: 9,
+              offset: Offset(3, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Hola, ${userName.isNotEmpty ? userName : "Usuario"}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  height: 1.4,
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const UsuarioPage()),
-              ).then((result) {
-                if (result == true) {
-                  setState(() {});
-                }
-              });
-            },
-            child: userImagePath != null
+            userImagePath != null
                 ? ClipOval(
                     child: Image.file(
                       File(userImagePath!),
-                      width: 48,
-                      height: 48,
+                      width: 70,
+                      height: 70,
                       fit: BoxFit.cover,
                     ),
                   )
-                : Icon(Icons.person, color: Colors.white, size: 48),
-          ),
-        ],
+                : Icon(Icons.person, color: Colors.white, size: 70),
+          ],
+        ),
       ),
     );
   }

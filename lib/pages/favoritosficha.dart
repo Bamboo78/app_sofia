@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 
 class FavoritosFichaDialog extends StatefulWidget {
@@ -42,6 +43,38 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
     }
   }
 
+  Future<void> _cargarImagenDeURL(String url) async {
+    try {
+      // Normalizar URL
+      String urlNormalizada = url;
+      if (!urlNormalizada.startsWith('http://') && !urlNormalizada.startsWith('https://')) {
+        urlNormalizada = 'https://$urlNormalizada';
+      }
+
+      // Obtener favicon
+      Uri faviconUri = Uri.parse('$urlNormalizada/favicon.ico');
+      final response = await http.get(faviconUri).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _imagenSeleccionada = File.fromRawPath(response.bodyBytes);
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo cargar la imagen del sitio')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const mainColor = Color(0xFF197A89);
@@ -54,7 +87,7 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icono de usuario
+            // Icono/Imagen de la página web
             Container(
               width: 140,
               height: 140,
@@ -64,7 +97,11 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(32),
-                onTap: _seleccionarImagen,
+                onTap: () async {
+                  if (favoritoController.text.isNotEmpty) {
+                    _cargarImagenDeURL(favoritoController.text);
+                  }
+                },
                 child: _imagenSeleccionada == null
                     ? const Center(
                         child: Icon(Icons.public, color: Colors.white, size: 90),
@@ -100,7 +137,7 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
               cursorColor: mainColor,
             ),
             const SizedBox(height: 12),
-            // Campo teléfono
+            // Campo página web
             TextField(
               controller: favoritoController,
               decoration: InputDecoration(
@@ -117,7 +154,6 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               ),
               cursorColor: mainColor,
-              keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 24),
             
