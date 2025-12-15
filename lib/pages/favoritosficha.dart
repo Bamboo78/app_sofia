@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class FavoritosFichaDialog extends StatefulWidget {
   final String? nombreInicial;
@@ -33,16 +34,6 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
     favoritoController = TextEditingController(text: widget.favoritoInicial ?? '');
   }
 
-  Future<void> _seleccionarImagen() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _imagenSeleccionada = File(pickedFile.path);
-      });
-    }
-  }
-
   Future<void> _cargarImagenDeURL(String url) async {
     try {
       // Normalizar URL
@@ -56,8 +47,14 @@ class _FavoritosFichaDialogState extends State<FavoritosFichaDialog> {
       final response = await http.get(faviconUri).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
+        // Guardar el favicon en el sistema de archivos
+        final dir = await getApplicationDocumentsDirectory();
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_favicon.ico';
+        final file = File(path.join(dir.path, fileName));
+        await file.writeAsBytes(response.bodyBytes);
+        
         setState(() {
-          _imagenSeleccionada = File.fromRawPath(response.bodyBytes);
+          _imagenSeleccionada = file;
         });
       } else {
         if (mounted) {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sofia/db/usuario_database.dart';
 import 'dart:io';
-import '../globals.dart';
 
 class UsuarioPage extends StatefulWidget {
   const UsuarioPage({super.key});
@@ -37,7 +36,6 @@ class _UsuarioPageState extends State<UsuarioPage> {
         if (usuario['imagenPath'] != null) {
           _image = File(usuario['imagenPath']);
         }
-        userImagePath = usuario['imagenPath'];
       });
     }
   }
@@ -48,7 +46,6 @@ class _UsuarioPageState extends State<UsuarioPage> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
-        userImagePath = pickedFile.path;
       });
     }
   }
@@ -114,10 +111,9 @@ class _UsuarioPageState extends State<UsuarioPage> {
                         'telefono': _telefonoController.text,
                         'direccion': _direccionController.text,
                         'nombreContacto': _nombreContactoController.text,
-                        'telefonoContacto': _telefonoContactoController.text,
-                        'imagenPath': userImagePath,
+                        'telefonoContacto': _telefonoController.text,
+                        'imagenPath': _image?.path,
                       });
-                      userName = _nombreController.text;
                       if (context.mounted) {
                         Navigator.of(context).pop(true);
                       }

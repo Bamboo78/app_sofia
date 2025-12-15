@@ -23,7 +23,7 @@ class AvisosDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE avisos (
@@ -38,6 +38,16 @@ class AvisosDatabase {
             lastUsedTime TEXT
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Agregar la columna lastUsedTime si no existe
+          try {
+            await db.execute('ALTER TABLE avisos ADD COLUMN lastUsedTime TEXT');
+          } catch (e) {
+            // Columna ya existe
+          }
+        }
       },
     );
   }

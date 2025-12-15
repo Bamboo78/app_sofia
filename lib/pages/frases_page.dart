@@ -118,20 +118,19 @@ class _RefranesPageState extends State<FrasesPage> {
               ),
             ),
             const Spacer(),
-            // Elementos decorativos e imagen abajo
-            SizedBox(
+            
+            SizedBox( // Elementos decorativos e imagen abajo
               height: 300, 
               child: Padding(
                 padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
                 child: Stack(
                   children: [
-                    // Cuadrados decorativos
                     Positioned(
-                      left: 220,
-                      bottom: 130,
+                      left: 240,
+                      top: 0,
                       child: Container(
-                        width: 140,
-                        height: 140,
+                        width: 100,
+                        height: 100,
                         decoration: BoxDecoration(
                           color: cardColor,
                           borderRadius: BorderRadius.circular(16),
@@ -139,8 +138,8 @@ class _RefranesPageState extends State<FrasesPage> {
                       ),
                     ),
                     Positioned(
-                      left: 160,
-                      bottom: 100,
+                      left: 180,
+                      top: 80,
                       child: Container(
                         width: 40,
                         height: 40,
@@ -160,6 +159,22 @@ class _RefranesPageState extends State<FrasesPage> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            // Botón VOLVER en la parte inferior absoluta
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF197A89),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('VOLVER', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),

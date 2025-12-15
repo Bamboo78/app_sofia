@@ -82,7 +82,7 @@ class _AgendaPageState extends State<AgendaPage> {
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else {
-                      final meds = snapshot.data ?? [];
+                      final meds = List<Map<String, dynamic>>.from(snapshot.data ?? []);
                       
                       return Column(
                         children: [
@@ -90,6 +90,7 @@ class _AgendaPageState extends State<AgendaPage> {
                             child: ListView.separated(
                               itemCount: meds.isNotEmpty ? meds.length + 1 : 1,
                               separatorBuilder: (_, _) => const SizedBox(height: 12),
+                              padding: const EdgeInsets.only(bottom: 24),
                               itemBuilder: (context, index) {
                                 // Último item es el botón de añadir
                                 if (index == meds.length) {

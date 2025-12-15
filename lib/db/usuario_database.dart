@@ -33,6 +33,28 @@ class UsuarioDatabase {
     );
   }
 
+  // Obtener nombre del usuario
+  static Future<String?> getNombre() async {
+    final usuario = await getUsuario();
+    return usuario?['nombre'] as String?;
+  }
+
+  // Obtener ruta de imagen del usuario
+  static Future<String?> getImagenPath() async {
+    final usuario = await getUsuario();
+    return usuario?['imagenPath'] as String?;
+  }
+
+  // Guardar nombre del usuario
+  static Future<void> saveNombre(String nombre) async {
+    await saveUsuario({'nombre': nombre});
+  }
+
+  // Guardar ruta de imagen del usuario
+  static Future<void> saveImagenPath(String? imagenPath) async {
+    await saveUsuario({'imagenPath': imagenPath});
+  }
+
   // Obtener datos del usuario (siempre un único registro con id=1)
   static Future<Map<String, dynamic>?> getUsuario() async {
     final db = await database;

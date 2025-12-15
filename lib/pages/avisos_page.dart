@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../db/avisos_database.dart';
 
 class AvisosPage extends StatefulWidget {
@@ -10,19 +11,78 @@ class AvisosPage extends StatefulWidget {
 
 class _AvisosPageState extends State<AvisosPage> {
   bool activado = false;
-  TimeOfDay? horaInicio;
-  TimeOfDay? horaFinal;
+  int? horaInicio;
+  int? horaFinal;
   int? intervalo;
+  int? avisoId; // Para guardar el ID del aviso si está editando
+  Timer? _saveTimer; // Timer para guardar automáticamente
 
   final TextEditingController _nombreContactoController = TextEditingController();
   final TextEditingController _telefonoContactoController = TextEditingController();
   final TextEditingController _mensajeController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Listener para guardar automáticamente cuando se cambian los campos de texto
+    _nombreContactoController.addListener(_onFieldChanged);
+    _telefonoContactoController.addListener(_onFieldChanged);
+    _mensajeController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    // Cancelar timer anterior si existe
+    _saveTimer?.cancel();
+    
+    // Crear nuevo timer para guardar después de 1 segundo de inactividad
+    _saveTimer = Timer(const Duration(seconds: 1), _saveToDatabase);
+  }
+
+  Future<void> _saveToDatabase() async {
+    if (horaInicio == null || horaFinal == null || intervalo == null) {
+      return; // No guardar si faltan campos requeridos
+    }
+
+    if (_nombreContactoController.text.isEmpty || 
+        _telefonoContactoController.text.isEmpty ||
+        _mensajeController.text.isEmpty) {
+      return; // No guardar si hay campos vacíos
+    }
+
+    try {
+      if (avisoId == null) {
+        await AvisosDatabase.insert({
+          'nombreContacto': _nombreContactoController.text,
+          'telefonoContacto': _telefonoContactoController.text,
+          'mensaje': _mensajeController.text,
+          'horaInicio': '${horaInicio!.toString().padLeft(2, '0')}:00',
+          'horaFinal': '${horaFinal!.toString().padLeft(2, '0')}:00',
+          'intervalo': intervalo,
+          'activado': activado ? 1 : 0,
+          'lastUsedTime': DateTime.now().toIso8601String(),
+        });
+      } else {
+        await AvisosDatabase.update(avisoId!, {
+          'nombreContacto': _nombreContactoController.text,
+          'telefonoContacto': _telefonoContactoController.text,
+          'mensaje': _mensajeController.text,
+          'horaInicio': '${horaInicio!.toString().padLeft(2, '0')}:00',
+          'horaFinal': '${horaFinal!.toString().padLeft(2, '0')}:00',
+          'intervalo': intervalo,
+          'activado': activado ? 1 : 0,
+        });
+      }
+    } catch (e) {
+      // Silenciar errores de guardado automático
+    }
+  }
+
+  @override
   void dispose() {
     _nombreContactoController.dispose();
     _telefonoContactoController.dispose();
     _mensajeController.dispose();
+    _saveTimer?.cancel();
     super.dispose();
   }
 
@@ -88,23 +148,25 @@ class _AvisosPageState extends State<AvisosPage> {
                           maxLines: 4,
                         ),
                         const SizedBox(height: 16),
-                        _TimePickerField(
+                        _HourDropdown(
                           label: 'HORA INICIO',
-                          selectedTime: horaInicio,
-                          onTimeChanged: (time) {
+                          selectedHour: horaInicio,
+                          onHourChanged: (value) {
                             setState(() {
-                              horaInicio = time;
+                              horaInicio = value;
                             });
+                            _onFieldChanged();
                           },
                         ),
                         const SizedBox(height: 16),
-                        _TimePickerField(
+                        _HourDropdown(
                           label: 'HORA FINAL',
-                          selectedTime: horaFinal,
-                          onTimeChanged: (time) {
+                          selectedHour: horaFinal,
+                          onHourChanged: (value) {
                             setState(() {
-                              horaFinal = time;
+                              horaFinal = value;
                             });
+                            _onFieldChanged();
                           },
                         ),
                         const SizedBox(height: 16),
@@ -114,6 +176,7 @@ class _AvisosPageState extends State<AvisosPage> {
                             setState(() {
                               intervalo = value;
                             });
+                            _onFieldChanged();
                           },
                         ),
                         const SizedBox(height: 32),
@@ -122,49 +185,94 @@ class _AvisosPageState extends State<AvisosPage> {
                   ),
               ),
               
-              SizedBox( // Botón abajo del todo
+              SizedBox( // Switch ACTIVADO/DESACTIVADO con deslizante
                 width: double.infinity,
                 height: 80,
+                child: Card(
+                  color: const Color(0xFFD1E4EA),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          activado ? 'ACTIVADO' : 'DESACTIVADO',
+                          style: TextStyle(
+                            color: activado ? mainColor : Colors.grey,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Switch(
+                          value: activado,
+                          onChanged: (value) async {
+                            if (horaInicio == null || horaFinal == null || intervalo == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Por favor completa todos los campos')),
+                              );
+                              return;
+                            }
+
+                            if (_nombreContactoController.text.isEmpty || 
+                                _telefonoContactoController.text.isEmpty ||
+                                _mensajeController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Por favor completa todos los campos')),
+                              );
+                              return;
+                            }
+
+                            setState(() {
+                              activado = value;
+                            });
+
+                            // Guardar o actualizar en base de datos automáticamente
+                            if (avisoId == null) {
+                              await AvisosDatabase.insert({
+                                'nombreContacto': _nombreContactoController.text,
+                                'telefonoContacto': _telefonoContactoController.text,
+                                'mensaje': _mensajeController.text,
+                                'horaInicio': '${horaInicio!.toString().padLeft(2, '0')}:00',
+                                'horaFinal': '${horaFinal!.toString().padLeft(2, '0')}:00',
+                                'intervalo': intervalo,
+                                'activado': value ? 1 : 0,
+                                'lastUsedTime': DateTime.now().toIso8601String(),
+                              });
+                            } else {
+                              await AvisosDatabase.update(avisoId!, {
+                                'nombreContacto': _nombreContactoController.text,
+                                'telefonoContacto': _telefonoContactoController.text,
+                                'mensaje': _mensajeController.text,
+                                'horaInicio': '${horaInicio!.toString().padLeft(2, '0')}:00',
+                                'horaFinal': '${horaFinal!.toString().padLeft(2, '0')}:00',
+                                'intervalo': intervalo,
+                                'activado': value ? 1 : 0,
+                              });
+                            }
+                          },
+                          activeThumbColor: mainColor,
+                          inactiveThumbColor: Colors.grey,
+                          inactiveTrackColor: Colors.grey[300],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Botón VOLVER en la parte inferior absoluta
+              SizedBox(
+                width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: activado ? Colors.grey : mainColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    shadowColor: Colors.black26,
+                    backgroundColor: mainColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () async {
-                    if (horaInicio == null || horaFinal == null || intervalo == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor completa todos los campos')),
-                      );
-                      return;
-                    }
-
-                    setState(() {
-                      activado = !activado;
-                    });
-
-                    // Guardar en base de datos
-                    await AvisosDatabase.insert({
-                      'nombreContacto': _nombreContactoController.text,
-                      'telefonoContacto': _telefonoContactoController.text,
-                      'mensaje': _mensajeController.text,
-                      'horaInicio': '${horaInicio!.hour.toString().padLeft(2, '0')}:${horaInicio!.minute.toString().padLeft(2, '0')}',
-                      'horaFinal': '${horaFinal!.hour.toString().padLeft(2, '0')}:${horaFinal!.minute.toString().padLeft(2, '0')}',
-                      'intervalo': intervalo,
-                      'activado': activado ? 1 : 0,
-                    });
-                  },
-                  child: Text(
-                    activado ? 'APAGADO' : 'ACTIVADO',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('VOLVER', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -213,54 +321,50 @@ class _AvisosTextField extends StatelessWidget {
   }
 }
 
-class _TimePickerField extends StatelessWidget {
+class _HourDropdown extends StatelessWidget {
   final String label;
-  final TimeOfDay? selectedTime;
-  final Function(TimeOfDay) onTimeChanged;
+  final int? selectedHour;
+  final Function(int) onHourChanged;
 
-  const _TimePickerField({
+  const _HourDropdown({
     required this.label,
-    required this.selectedTime,
-    required this.onTimeChanged,
+    required this.selectedHour,
+    required this.onHourChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     const Color mainColor = Color(0xFF197A89);
     
-    return GestureDetector(
-      onTap: () async {
-        final time = await showTimePicker(
-          context: context,
-          initialTime: selectedTime ?? TimeOfDay.now(),
-        );
-        if (time != null) {
-          onTimeChanged(time);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: mainColor, width: 1),
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: mainColor, width: 1),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
+      ),
+      child: DropdownButton<int>(
+        isExpanded: true,
+        underline: const SizedBox(),
+        hint: Text(
+          label,
+          style: const TextStyle(color: Colors.grey, fontSize: 16),
         ),
-        child: Row(
-          children: [
-            Icon(Icons.schedule, size: 20, color: mainColor),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                selectedTime != null
-                    ? '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}'
-                    : label,
-                style: TextStyle(
-                  color: selectedTime != null ? Colors.black87 : Colors.grey,
-                  fontSize: 16,
-                ),
-              ),
+        value: selectedHour,
+        items: List.generate(24, (index) {
+          final hour = index + 1;
+          return DropdownMenuItem<int>(
+            value: hour,
+            child: Text(
+              '${hour.toString().padLeft(2, '0')}:00',
+              style: const TextStyle(fontSize: 16),
             ),
-          ],
-        ),
+          );
+        }),
+        onChanged: (value) {
+          if (value != null) {
+            onHourChanged(value);
+          }
+        },
       ),
     );
   }
@@ -293,7 +397,7 @@ class _IntervalDropdown extends StatelessWidget {
           style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
         value: selectedInterval,
-        items: List.generate(6, (index) {
+        items: List.generate(4, (index) {
           final hours = index + 1;
           return DropdownMenuItem<int>(
             value: hours,

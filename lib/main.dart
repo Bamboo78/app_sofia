@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
-import 'globals.dart';
 import 'pages/medicacion_diaria.dart';
 import 'pages/avisos_page.dart';
 import 'pages/favoritos_page.dart';
@@ -11,9 +10,12 @@ import 'pages/contactos_page.dart';
 import 'pages/frases_page.dart';
 import 'pages/usuario_page.dart';
 import 'db/usuario_database.dart';
+import 'db/avisos_database.dart';
+import 'services/avisos_service.dart';
 
-void main() {
-  SystemChrome.setPreferredOrientations([
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
@@ -125,6 +127,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _loadUserData();
+    // Iniciar monitoreo de avisos
+    AvisosService().startMonitoring();
     Future.delayed(const Duration(milliseconds: 100), () {
       setState(() {
         _opacity = 1.0;
@@ -136,10 +140,19 @@ class _MyHomePageState extends State<MyHomePage> {
     final usuarioData = await UsuarioDatabase.getUsuario();
     if (usuarioData != null) {
       setState(() {
-        userName = usuarioData['nombre'] ?? '';
-        userImagePath = usuarioData['imagenPath'];
-        isAuthenticated = userName.isNotEmpty;
+        isAuthenticated = (usuarioData['nombre'] as String? ?? '').isNotEmpty;
       });
+    }
+  }
+
+  Future<void> _updateLastUsedTime() async {
+    try {
+      final avisos = await AvisosDatabase.getActivados();
+      for (final aviso in avisos) {
+        await AvisosDatabase.updateLastUsedTime(aviso['id'] as int);
+      }
+    } catch (e) {
+      // Silenciar errores
     }
   }
 
@@ -147,6 +160,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     const Color mainColor = Color(0xFF197A89);
     const Color cardColor = Color(0xFFD1E4EA);
+    
+    // Registrar uso de la app
+    _updateLastUsedTime();
     
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
@@ -173,10 +189,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                 label: 'AVISOS',
                                 color: mainColor,
                                 cardColor: cardColor,
+                                mostrarEstado: true,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => const AvisosPage()),
-                                  );
+                                  ).then((_) {
+                                    setState(() {});
+                                  });
                                 },
                               ),
                             ),
@@ -340,31 +359,40 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Hola, ${userName.isNotEmpty ? userName : "Usuario"}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  height: 1.4,
-                ),
-              ),
-            ),
-            userImagePath != null
-                ? ClipOval(
-                    child: Image.file(
-                      File(userImagePath!),
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: UsuarioDatabase.getUsuario(),
+          builder: (context, snapshot) {
+            final usuario = snapshot.data;
+            final nombre = usuario?['nombre'] as String? ?? 'Usuario';
+            final imagenPath = usuario?['imagenPath'] as String?;
+            
+            return Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Hola, $nombre',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      height: 1.4,
                     ),
-                  )
-                : Icon(Icons.person, color: Colors.white, size: 70),
-          ],
+                  ),
+                ),
+                imagenPath != null
+                    ? ClipOval(
+                        child: Image.file(
+                          File(imagenPath),
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(Icons.person, color: Colors.white, size: 70),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -378,7 +406,8 @@ class _MenuCard extends StatelessWidget {
   final String label;
   final Color color;
   final Color cardColor;
-  final VoidCallback? onTap; 
+  final VoidCallback? onTap;
+  final bool? mostrarEstado; // Para avisos
 
   const _MenuCard({
     required this.icon,
@@ -386,6 +415,7 @@ class _MenuCard extends StatelessWidget {
     required this.color,
     required this.cardColor,
     this.onTap,
+    this.mostrarEstado,
   });
 
   @override
@@ -396,7 +426,9 @@ class _MenuCard extends StatelessWidget {
       elevation: 8,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: onTap, 
+        onTap: onTap,
+        splashColor: color.withValues(alpha: 0.3),
+        highlightColor: color.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
@@ -413,6 +445,30 @@ class _MenuCard extends StatelessWidget {
                   letterSpacing: 1,
                 ),
               ),
+              if (mostrarEstado == true)
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: AvisosDatabase.getAll(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                      final ultimoAviso = snapshot.data!.last;
+                      final activado = ultimoAviso['activado'] == 1;
+                      return Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          Text(
+                            activado ? 'ACTIVADO' : 'DESACTIVADO',
+                            style: TextStyle(
+                              color: activado ? color : Colors.grey,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
             ],
           ),
         ),
