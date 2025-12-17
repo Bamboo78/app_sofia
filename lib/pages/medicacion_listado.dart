@@ -100,7 +100,7 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
                           } else if (snapshot.hasError) {
                             return Center(child: Text('Error: ${snapshot.error}'));
                           } else {
-                            final meds = snapshot.data ?? [];
+                            final meds = List<Map<String, dynamic>>.from(snapshot.data ?? []);
                             return ListView.separated(
                               itemCount: meds.length,
                               separatorBuilder: (_, _) => const SizedBox(height: 16),
@@ -231,6 +231,15 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
     );
   }
 
+  List<String> _generarHoras() {
+    final horas = <String>[];
+    for (int h = 0; h < 24; h++) {
+      horas.add('${h.toString().padLeft(2, '0')}:00');
+      horas.add('${h.toString().padLeft(2, '0')}:30');
+    }
+    return horas;
+  }
+
   void _showEditDialog(
     BuildContext context,
     int? index,
@@ -243,77 +252,100 @@ class _MedicacionListadoPageState extends State<MedicacionListadoPage> {
         text: isNew ? '' : meds[index!]['nombre']);
     final descController = TextEditingController(
         text: isNew ? '' : meds[index!]['descripcion']);
-    final horaController = TextEditingController(
-        text: isNew ? '' : meds[index!]['hora']);
+    
+    String? horaSeleccionada = isNew ? null : meds[index!]['hora'];
+    final listaHoras = _generarHoras();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          isNew ? 'Añadir medicación' : 'Editar medicación',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'Descripción'),
-            ),
-            TextField(
-              controller: horaController,
-              decoration: const InputDecoration(labelText: 'Hora (HH:mm)'),
-            ),
-          ],
-        ),
-        actions: [
-          if (!isNew)
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            isNew ? 'Añadir medicación' : 'Editar medicación',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(labelText: 'Descripción'),
+              ),
+              const SizedBox(height: 16),
+              DropdownButton<String>(
+                value: horaSeleccionada,
+                hint: const Text('Selecciona una hora'),
+                isExpanded: true,
+                items: listaHoras.map((hora) {
+                  return DropdownMenuItem<String>(
+                    value: hora,
+                    child: Text(hora),
+                  );
+                }).toList(),
+                onChanged: (valor) {
+                  setState(() {
+                    horaSeleccionada = valor;
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            if (!isNew)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                ),
+                onPressed: () async {
+                  await MedicacionDatabase.delete(meds[index!]['id']);
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    _actualizarLista();
+                  }
+                },
+                child: const Text(
+                  'Borrar',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: mainColor),
               onPressed: () async {
-                await MedicacionDatabase.delete(meds[index!]['id']);
+                if (horaSeleccionada == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Selecciona una hora')),
+                  );
+                  return;
+                }
+                if (isNew) {
+                  await MedicacionDatabase.insert({
+                    'nombre': nameController.text,
+                    'descripcion': descController.text,
+                    'hora': horaSeleccionada,
+                  });
+                } else {
+                  await MedicacionDatabase.update(meds[index!]['id'], {
+                    'nombre': nameController.text,
+                    'descripcion': descController.text,
+                    'hora': horaSeleccionada,
+                  });
+                }
                 if (context.mounted) {
                   Navigator.of(context).pop();
                   _actualizarLista();
                 }
               },
-              child: const Text(
-                'Borrar',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Guardar', style: TextStyle(color: Colors.white)),
             ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: mainColor),
-            onPressed: () async {
-              if (isNew) {
-                await MedicacionDatabase.insert({
-                  'nombre': nameController.text,
-                  'descripcion': descController.text,
-                  'hora': horaController.text,
-                });
-              } else {
-                await MedicacionDatabase.update(meds[index!]['id'], {
-                  'nombre': nameController.text,
-                  'descripcion': descController.text,
-                  'hora': horaController.text,
-                });
-              }
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                _actualizarLista();
-              }
-            },
-            child: const Text('Guardar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

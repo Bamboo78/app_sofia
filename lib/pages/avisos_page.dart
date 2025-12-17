@@ -131,7 +131,7 @@ class _AvisosPageState extends State<AvisosPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 80),
+                        const SizedBox(height: 40),
                         _AvisosTextField(
                           label: 'NOMBRE CONTACTO',
                           controller: _nombreContactoController,
@@ -145,9 +145,9 @@ class _AvisosPageState extends State<AvisosPage> {
                         _AvisosTextField(
                           label: 'MENSAJE',
                           controller: _mensajeController,
-                          maxLines: 4,
+                          maxLines: 2,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 32),
                         _HourDropdown(
                           label: 'HORA INICIO',
                           selectedHour: horaInicio,
@@ -187,7 +187,7 @@ class _AvisosPageState extends State<AvisosPage> {
               
               SizedBox( // Switch ACTIVADO/DESACTIVADO con deslizante
                 width: double.infinity,
-                height: 80,
+                height: 60,
                 child: Card(
                   color: const Color(0xFFD1E4EA),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

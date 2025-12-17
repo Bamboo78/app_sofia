@@ -22,7 +22,179 @@ class _FavoritosPageState extends State<FavoritosPage> {
     _favoritosFuture = FavoritosDatabase.getAll();
   }
 
-
+  void _mostrarOpcionesFavorito(Map<String, dynamic> favorito, int posicion) {
+    const Color cardColor = Color(0xFFD1E4EA);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(favorito['nombre'] ?? 'Favorito'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (favorito['imagenPath'] != null && (favorito['imagenPath'] as String).isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(favorito['imagenPath']),
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              if (favorito['imagenPath'] != null && (favorito['imagenPath'] as String).isNotEmpty)
+                const SizedBox(height: 16),
+              Text(
+                favorito['url'] ?? '',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          // Botón ABRIR
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.open_in_browser, size: 20),
+              label: const Text('ABRIR', style: TextStyle(fontSize: 14, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: mainColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () async {
+                final url = favorito['url'] ?? '';
+                if (url.isNotEmpty) {
+                  final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
+                  try {
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No se pudo abrir la URL')),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                }
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Botón MODIFICAR
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.edit, size: 20),
+              label: const Text('MODIFICAR', style: TextStyle(fontSize: 14, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                showDialog(
+                  context: context,
+                  builder: (context) => FavoritosFichaDialog(
+                    nombreInicial: favorito['nombre'] ?? '',
+                    favoritoInicial: favorito['url'] ?? '',
+                    onGuardar: (nombre, url, imagen) async {
+                      await FavoritosDatabase.update(posicion, {
+                        'nombre': nombre,
+                        'url': url,
+                        'imagenPath': imagen?.path ?? favorito['imagenPath'],
+                      });
+                      if (mounted) {
+                        setState(() {
+                          _favoritosFuture = FavoritosDatabase.getAll();
+                        });
+                      }
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Botón BORRAR
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.delete, size: 20),
+              label: const Text('BORRAR', style: TextStyle(fontSize: 14, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: cardColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: const Text('Confirmar eliminación'),
+                    content: Text('¿Estás seguro de que deseas eliminar a ${favorito['nombre']}?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('CANCELAR'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        onPressed: () async {
+                          await FavoritosDatabase.delete(posicion);
+                          if (mounted) {
+                            setState(() {
+                              _favoritosFuture = FavoritosDatabase.getAll();
+                            });
+                          }
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: const Text('BORRAR', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Botón CERRAR
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('CERRAR', style: TextStyle(fontSize: 14, color: Color(0xFF197A89))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +248,7 @@ class _FavoritosPageState extends State<FavoritosPage> {
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else {
-                      final favoritos = snapshot.data ?? [];
+                      final favoritos = List<Map<String, dynamic>>.from(snapshot.data ?? []);
                       
                       // Crear un mapa de favoritos por posición (1-6)
                       final favoritosPorPosicion = <int, Map<String, dynamic>>{};
@@ -120,79 +292,14 @@ class _FavoritosPageState extends State<FavoritosPage> {
                                       }
                                       if (context.mounted) {
                                         Navigator.of(context).pop();
+                                        Navigator.of(context).pop();
                                       }
                                     },
                                   ),
                                 );
                               } else {
-                                // Abrir URL del favorito
-                                final url = item['url'] ?? '';
-                                if (url.isNotEmpty) {
-                                  final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-                                  if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                  }
-                                }
-                              }
-                            },
-                            onLongPress: () {
-                              if (!isEmpty && context.mounted) {
-                                Timer(const Duration(seconds: 2), () {
-                                  if (!context.mounted) return;
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Opciones'),
-                                      content: const Text('¿Qué deseas hacer?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: const Text('CANCELAR'),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            // Mostrar confirmación de borrado
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) => AlertDialog(
-                                                title: const Text('Confirmar borrado'),
-                                                content: const Text('¿Estás seguro de que deseas borrar este favorito?'),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Navigator.pop(context),
-                                                    child: const Text('CANCELAR'),
-                                                  ),
-                                                  ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: Colors.red,
-                                                    ),
-                                                    onPressed: () async {
-                                                      await FavoritosDatabase.delete(posicion);
-                                                      if (mounted) {
-                                                        setState(() {
-                                                          _favoritosFuture = FavoritosDatabase.getAll();
-                                                        });
-                                                      }
-                                                      if (context.mounted) {
-                                                        Navigator.pop(context);
-                                                      }
-                                                    },
-                                                    child: const Text('BORRAR', style: TextStyle(color: Colors.white)),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                          child: const Text('BORRAR', style: TextStyle(color: Colors.white)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                });
+                                // Mostrar diálogo con opciones
+                                _mostrarOpcionesFavorito(item, posicion);
                               }
                             },
                             child: Card(

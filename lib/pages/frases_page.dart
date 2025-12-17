@@ -120,7 +120,7 @@ class _RefranesPageState extends State<FrasesPage> {
             const Spacer(),
             
             SizedBox( // Elementos decorativos e imagen abajo
-              height: 300, 
+              height: 220, 
               child: Padding(
                 padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
                 child: Stack(
@@ -151,7 +151,7 @@ class _RefranesPageState extends State<FrasesPage> {
                     ),
                      
                     Align( // Imagen de usuario
-                      alignment: Alignment.bottomLeft,
+                      alignment: Alignment.bottomLeft, 
                       child: Image.asset(
                         'assets/logo.png', 
                         width: 180,
@@ -162,9 +162,9 @@ class _RefranesPageState extends State<FrasesPage> {
                 ),
               ),
             ),
-            // Botón VOLVER en la parte inferior absoluta
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            
+            Padding(  // Botón VOLVER en la parte inferior absoluta
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
               child: SizedBox(
                 width: double.infinity,
                 height: 56,

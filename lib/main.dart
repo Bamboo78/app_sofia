@@ -175,7 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               children: [
                 buildAppBar(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 Expanded( //contenido de las terjetas
                   child: Column(

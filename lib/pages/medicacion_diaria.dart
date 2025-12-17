@@ -90,7 +90,7 @@ class _MedicacionDiariaPageState extends State<MedicacionDiariaPage> {
                       } else if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       } else {
-                        final medicaciones = snapshot.data ?? [];
+                        final medicaciones = List<Map<String, dynamic>>.from(snapshot.data ?? []);
                         return ListView.separated(
                           itemCount: medicaciones.length,
                           separatorBuilder: (_, _) => const SizedBox(height: 12),

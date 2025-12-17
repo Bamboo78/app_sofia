@@ -22,10 +22,15 @@ class _ContactosPageState extends State<ContactosPage> {
     _contactosFuture = ContactosDatabase.getAll();
   }
 
-  void _mostrarAgregarContactoManual() {
-    String nombre = '';
-    String telefono = '';
-    File? imagenSeleccionada;
+  void _mostrarAgregarContactoManual({bool isEditing = false, Map<String, dynamic>? contacto}) {
+    String nombre = isEditing ? (contacto?['nombre'] ?? '') : '';
+    String telefono = isEditing ? (contacto?['telefono'] ?? '') : '';
+    File? imagenSeleccionada = isEditing && (contacto?['imagenPath'] ?? '').isNotEmpty
+        ? File(contacto!['imagenPath'])
+        : null;
+    
+    final nombreController = TextEditingController(text: nombre);
+    final telefonoController = TextEditingController(text: telefono);
     
     showDialog(
       context: context,
@@ -33,7 +38,7 @@ class _ContactosPageState extends State<ContactosPage> {
         builder: (context, setState) => AlertDialog(
           backgroundColor: cardColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Agregar contacto'),
+          title: Text(isEditing ? 'Modificar contacto' : 'Agregar contacto'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -61,6 +66,7 @@ class _ContactosPageState extends State<ContactosPage> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
+                  controller: nombreController,
                   decoration: const InputDecoration(
                     labelText: 'Nombre',
                     border: OutlineInputBorder(),
@@ -72,6 +78,7 @@ class _ContactosPageState extends State<ContactosPage> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
+                  controller: telefonoController,
                   decoration: const InputDecoration(
                     labelText: 'Teléfono',
                     border: OutlineInputBorder(),
@@ -101,19 +108,32 @@ class _ContactosPageState extends State<ContactosPage> {
                   }
                   return;
                 }
-                await ContactosDatabase.insert({
-                  'nombre': nombre,
-                  'telefono': telefono,
-                  'imagenPath': imagenSeleccionada?.path,
-                });
-                if (context.mounted) {
-                  Navigator.of(context).pop();
+                
+                if (isEditing && contacto != null) {
+                  // Actualizar contacto existente
+                  await ContactosDatabase.update(contacto['id'], {
+                    'nombre': nombre,
+                    'telefono': telefono,
+                    'imagenPath': imagenSeleccionada?.path,
+                  });
+                } else {
+                  // Insertar nuevo contacto
+                  await ContactosDatabase.insert({
+                    'nombre': nombre,
+                    'telefono': telefono,
+                    'imagenPath': imagenSeleccionada?.path,
+                  });
                 }
-                // Actualizar la página principal después de cerrar el diálogo
+                
+                // Actualizar la página antes de cerrar el diálogo
                 if (mounted) {
                   setState(() {
                     _contactosFuture = ContactosDatabase.getAll();
                   });
+                }
+                
+                if (context.mounted) {
+                  Navigator.of(context).pop();
                 }
               },
               child: const Text('GUARDAR', style: TextStyle(color: Colors.white)),
@@ -201,6 +221,23 @@ class _ContactosPageState extends State<ContactosPage> {
                     },
                   ),
                 ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.edit, size: 24),
+                  label: const Text('MODIFICAR', style: TextStyle(fontSize: 16, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _mostrarAgregarContactoManual(isEditing: true, contacto: contactoGuardado);
+                  },
+                ),
+              ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -316,7 +353,7 @@ class _ContactosPageState extends State<ContactosPage> {
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else {
-                      final contactos = snapshot.data ?? [];
+                      final contactos = List<Map<String, dynamic>>.from(snapshot.data ?? []);
                       // Mostrar máximo 6 contactos en grid 2x3
                       return GridView.builder(
                         itemCount: 6,
